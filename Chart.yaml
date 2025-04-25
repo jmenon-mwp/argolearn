@@ -1,7 +1,7 @@
 # multi-pod-chart/Chart.yaml
 apiVersion: v2
-name: multi-pod-chart
-description: A basic Helm chart to create multiple pods from a list in values
+name: argolearn
+description: A basic Helm chart to create multiple pods
 # Type indicates this chart is deployable
 type: application
 
