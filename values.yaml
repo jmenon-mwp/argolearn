@@ -1,0 +1,19 @@
+# multi-pod-chart/values.yaml
+
+# Define a list named 'pods' where each item represents a pod to be created
+pods:
+  - name: pod-alpha
+    containerName: alpha-container
+    image: nginx:1.25 # Specify image and tag
+    containerPort: 80 # Optional: Port the container listens on
+
+  - name: pod-beta
+    containerName: beta-container
+    image: busybox:latest
+    command: ["/bin/sh", "-c", "echo 'Hello from Pod Beta'; sleep 3600"]
+
+  - name: pod-gamma
+    containerName: gamma-container
+    image: httpd:2.4
+    containerPort: 80
+

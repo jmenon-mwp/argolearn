@@ -1,0 +1,42 @@
+# multi-pod-chart/templates/pod-list.yaml
+
+{{- /* Helm templating function 'range' iterates over the list '.Values.pods' */}}
+{{- range .Values.pods }}
+--- {{/* YAML document separator, essential for creating multiple resources from one template */}}
+apiVersion: v1
+kind: Pod
+metadata:
+  # Use the 'name' field from the current item in the list for the Pod's name
+  name: {{ .name }}
+  labels:
+    # Add some standard Helm labels for tracking
+    app.kubernetes.io/managed-by: {{ $.Release.Service }} # Should be Helm
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    helm.sh/chart: {{ printf "%s-%s" $.Chart.Name $.Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+    # Add a custom label based on the pod definition name
+    pod-group: {{ $.Chart.Name }}-pods
+    pod-spec-name: {{ .name }}
+spec:
+  containers:
+    # Each Pod will have one container based on the list item
+    - name: {{ .containerName }}
+      image: {{ .image }}
+      # Best practice: Specify pull policy
+      imagePullPolicy: IfNotPresent
+
+      {{- /* Conditionally include command if specified in values.yaml */}}
+      {{- if .command }}
+      command:
+        {{- /* Convert the YAML list/string to proper YAML format */}}
+        {{- toYaml .command | nindent 8 }}
+      {{- end }}
+
+      {{- /* Conditionally include ports if containerPort is specified */}}
+      {{- if .containerPort }}
+      ports:
+        - containerPort: {{ .containerPort }}
+      {{- end }}
+
+{{- /* End of the range loop */}}
+{{- end }}
+
