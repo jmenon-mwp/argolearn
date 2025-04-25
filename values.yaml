@@ -12,3 +12,8 @@ pods:
     image: busybox:latest
     command: ["/bin/sh", "-c", "echo 'Hello from Pod Beta'; sleep 3600"]
 
+  - name: pod-gamma
+    containerName: gamma-container
+    image: httpd:2.4
+    containerPort: 80
+

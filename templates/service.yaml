@@ -1,0 +1,52 @@
+# multi-pod-chart/templates/service.yaml
+
+{{- /* Iterate over the same pods list used for creating Pods */}}
+{{- range .Values.pods }}
+  {{- /* --- Service Definition --- */}}
+  {{- /* Only proceed if 'createService' is true and the 'service' block exists */}}
+  {{- if and .createService .service }}
+    {{- /* Validate that the essential service port is defined */}}
+    {{- if not .service.port }}
+      {{- /* Helm Error: Stop templating if required 'service.port' is missing */}}
+      {{- fail (printf "ERROR: Service creation requested for pod '%s' but required value 'service.port' is missing." .name) }}
+    {{- end }}
+
+--- {{/* YAML document separator */}}
+apiVersion: v1
+kind: Service
+metadata:
+  # Create a unique name for the service, often related to the pod name
+  name: {{ .name }}-svc
+  labels:
+    # Include standard Helm labels
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    helm.sh/chart: {{ printf "%s-%s" $.Chart.Name $.Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+    # Include the label used for selecting the pod
+    pod-spec-name: {{ .name }}
+spec:
+  # Set the service type, defaulting to ClusterIP
+  type: {{ default "ClusterIP" .service.type }}
+  ports:
+    - port: {{ .service.port }}
+      # Set the target port, defaulting to the service port if not specified
+      targetPort: {{ default .service.port .service.targetPort }}
+      # Set the protocol, defaulting to TCP
+      protocol: {{ default "TCP" .service.protocol }}
+      # Conditionally set the port name if provided
+      {{- if .service.portName }}
+      name: {{ .service.portName }}
+      {{- end }}
+      # Conditionally include nodePort if type is NodePort and nodePort is specified
+      {{- if (and (eq (default "ClusterIP" .service.type) "NodePort") .service.nodePort) }}
+      nodePort: {{ .service.nodePort }}
+      {{- end }}
+  # --- IMPORTANT: Selector ---
+  # This selector ensures the Service routes traffic ONLY to the Pod created
+  # from the same item in the values list. It matches the 'pod-spec-name' label
+  # we added to the Pod template.
+  selector:
+    pod-spec-name: {{ .name }}
+
+  {{- end }}{{/* End of 'if and .createService .service' */}}
+{{- end }}{{/* End of 'range .Values.pods' */}}
