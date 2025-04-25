@@ -1,0 +1,9 @@
+# multi-pod-chart/values.yaml
+
+# Define a list named 'pods' where each item represents a pod to be created
+pods:
+  - name: pod-gamma
+    containerName: gamma-container
+    image: httpd:2.4
+    containerPort: 80
+
